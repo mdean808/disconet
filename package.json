@@ -4,10 +4,12 @@
   "description": "Decentralized NodeJS Framework",
   "main": "index.js",
   "directories": {
-    "example": "examples"
+    "example": "examples",
+    "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "uglifyjs --compress --mangle -- ./src/main.js"
   },
   "repository": {
     "type": "git",
@@ -18,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/mdean808/fin.js/issues"
   },
-  "homepage": "https://github.com/mdean808/fin.js#readme"
+  "homepage": "https://github.com/mdean808/fin.js#readme",
+  "devDependencies": {
+    "uglify-js": "^3.4.9"
+  }
 }
