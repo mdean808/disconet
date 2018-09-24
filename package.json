@@ -1,0 +1,22 @@
+{
+  "name": "fin.js",
+  "version": "0.0.1",
+  "description": "Decentralized NodeJS Framework",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdean808/fin.js.git"
+  },
+  "author": "Morgan Dean and Dillon DuPont",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mdean808/fin.js/issues"
+  },
+  "homepage": "https://github.com/mdean808/fin.js#readme"
+}
