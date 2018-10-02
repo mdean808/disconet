@@ -23,5 +23,8 @@
   "homepage": "https://github.com/mdean808/fin.js#readme",
   "devDependencies": {
     "uglify-js": "^3.4.9"
+  },
+  "dependencies": {
+    "elliptic": "^6.4.1"
   }
 }
