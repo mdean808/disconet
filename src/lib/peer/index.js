@@ -1,5 +1,5 @@
 const Router = require('../../routers')
-export class Peer {
+class Peer {
     constructor ({address}) {
         this.address = address;
     }
@@ -10,15 +10,11 @@ export class Peer {
         if (!this.address) {
             throw new Error("No address found.")
         }
-
-        if (typeof msg !== 'string') {
-            msg = msg.toString();
-        }
-
-
         splitAddress(this.address).router.send(msg, this.address); // send message using specified router mode to address
     }
 }
+
+module.exports = Peer;
 
 function splitAddress(addr) {
     const splitAddr = addr.split('/');

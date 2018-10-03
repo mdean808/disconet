@@ -1,4 +1,4 @@
-const { Node, Peer } = require('finjs')
+const { Node, Peer } = require('../src/main.js')
 let exampleApp = new Node('example');
 
 exampleApp.on('ready', async () => {
