@@ -12,23 +12,19 @@ const Routers = require('..../routers');
         this.routers.use('http', new require('./http')({ node: this, port: port }));
         this.routers.use('onion', new require('./onion')({ node: this }));
         this.routers.use('p2p', new require('./p2p')({ node: this }));
+
+        this.nonces = {};
     }
     
     listen() {
 
     }
 
+    fetchPeers() {
+
+    }
 
     receive(req, res) {
-        /* {
-            peer: ....
-            body: ""
-        }
-
-        {
-            end()
-        }
-        */
         this.emit('message', req, res);
     }
 }

@@ -16,6 +16,7 @@ class Routers {
     use(name, handler) {
         if(this.routers[name])
             throw new Error(`Router with name ${name} already registered!`);
+        handler.routerId = name;
         this.routers[name] = handler;
     }
 }

@@ -5,13 +5,13 @@ class Peer {
         this.address = address;
     }
     sendToPeer(msg) {
-        if (!msg) {
+        if (!msg)
             throw new Error("No message found.")
-        }
-        if (!this.address) {
+        if (!this.address)
             throw new Error("No address found.")
-        }
-        splitAddress(this.node, this.address).router.send(msg, this.address); // send message using specified router mode to address
+        return new Promise((res, rej) => {
+            splitAddress(this.node, this.address).router.send(msg, this.address, res); // send message using specified router mode to address
+        });
     }
 }
 
