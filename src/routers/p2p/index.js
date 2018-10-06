@@ -12,3 +12,5 @@ class p2p {
 
     }
 }
+
+module.exports = p2p;

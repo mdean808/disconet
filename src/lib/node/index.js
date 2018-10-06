@@ -1,23 +1,32 @@
 const Pool = require('../pool');
 const EventEmitter = require('events');
-const Routers = require('..../routers');
+const Routers = require('../../routers');
+const http = require('../../routers/http');
+const onion = require('../../routers/onion');
+const p2p = require('../../routers/p2p');
+
 // special port is 9410 
- class Node extends EventEmitter {
-    constructor(name, { port = 10 }) {
+class Node extends EventEmitter {
+    constructor(name, { port = 8610 }) {
         super();
         this.name = name;
         this.pool = new Pool(name);
         this.routers = new Routers(this);
-
-        this.routers.use('http', new require('./http')({ node: this, port: port }));
-        this.routers.use('onion', new require('./onion')({ node: this }));
-        this.routers.use('p2p', new require('./p2p')({ node: this }));
+        
+        this.routers.use('http', new http({ node: this, port: port }));
+        this.routers.use('onion', new onion({ node: this }));
+        this.routers.use('p2p', new p2p({ node: this }));
 
         this.nonces = {};
     }
     
-    listen() {
+    async listen() {
+        let vals = Object.values(this.routers.routers);
+        for(let i = 0; i < vals.length; i++) {
+            await vals[i].listen();
+        }
 
+        this.emit('ready');
     }
 
     fetchPeers() {

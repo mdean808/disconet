@@ -1,4 +1,4 @@
-class http {
+class onion {
     constructor() {
 
     }
@@ -12,3 +12,5 @@ class http {
 
     }
 }
+
+module.exports = onion;

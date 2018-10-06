@@ -4,7 +4,7 @@ class Peer {
         this.node = node;
         this.address = address;
     }
-    sendToPeer(msg) {
+    send(msg) {
         if (!msg)
             throw new Error("No message found.")
         if (!this.address)
