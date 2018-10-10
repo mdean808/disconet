@@ -1,10 +1,10 @@
 const express = require('express');
-const request = require('request')
+const WebSocket = require('ws')
 const bodyParser = require('body-parser');
 const os = require('os');
 const binary = require('../../lib/utils/binary.js');
 
-class http {
+class ws {
     constructor({
         port,
         node,
@@ -18,8 +18,51 @@ class http {
     }
     send(msg, address, resolve) {
         const nonce = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+        const ws = new WebSocket('ws://' + address.split('/').splice(1).join('/') + '/receive');
+        this.nonces[nonce] = resolve;
+        ws.on('open', () => {
+            ws.send(binary.serialize({
+                headers: {
+                    'nonce': nonce,
+                },
+                body: {
+                    content: msg
+                }
+            }));
+        })
+        ws.on('message', (data) => {
+            let payload = binary.deserialize(data);
+            if(payload.type == 'end') {
+                this.nonces[nonce](payload.body);
+            } else if(payload.type == 'reply') {
+                const nodeReq = {
+                body: payload.body,
+                nonce: payload.nonce,
+                router: this,
+                reply: (msg) => {
+                    let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+                        ws.send(binary.serialize({
+                            nonce: id,
+                            type: 'reply',
+                            body: msg
+                        }));
+                        return new Promise((resolveReply, rejectReply) => {
+                            this.nonces[id] = resolveReply;
+                        });                        
+                    },
+                end: (msg) => {
+                    //todo: correct way to close the websocket w/ a message????
+                    res.end(binary.serialize({
+                        type: 'end',
+                        body: msg
+                    }));
+                }
+            };
+            this.nonces[nonce](nodeReq);
+        }
+        });
+        // to be removed
         const reqOptions = {
-            url: 'http://' + address.split('/').splice(1).join('/') + '/receive',
             headers: {
                 'nonce': nonce,
             },
@@ -28,7 +71,6 @@ class http {
             },
             json: true,
         }
-        this.nonces[nonce] = resolve;
         request.post(reqOptions).on('response', (res) => {
             res.setEncoding('hex');
             res.on('data', (data) => {
@@ -71,6 +113,36 @@ class http {
     }
     listen() {
         return new Promise((res, rej) => {
+            const wss = new WebSocket.Server({ port: this.port });
+            wss.on('connection', (ws) => {
+                ws.on('message', (message) => {
+                    let message = binary.deserialize(message)
+                    const nodeReq = {
+                        body: message.body,
+                        nonce: message.nonce,
+                        router: this,
+                        reply: (msg) => {
+                            let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+                            ws.send(binary.serialize({
+                                nonce: id,
+                                type: 'reply',
+                                body: msg
+                            }));
+                            return new Promise((resolve, reject) => {
+                                this.nonces[id] = resolve;
+                            });                 
+                        },
+                        end: (msg) => {
+                            // somehow close ws
+                            res.end(binary.serialize({
+                                type: 'end',
+                                body: msg
+                           }));
+                        }
+                    };
+                });  
+            });
+            //to be removed
             this.app.use(bodyParser.json())
             this.app.listen(this.port, res);
             this.app.post('/receive', (req, res) => {
@@ -107,4 +179,4 @@ class http {
     }
 }
 
-module.exports = http;
+module.exports = ws;

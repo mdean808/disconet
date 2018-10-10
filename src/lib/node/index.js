@@ -1,7 +1,7 @@
 const Pool = require('../pool');
 const EventEmitter = require('events');
 const Routers = require('../../routers');
-const http = require('../../routers/http');
+const ws = require('../../routers/ws');
 const onion = require('../../routers/onion');
 const p2p = require('../../routers/p2p');
 
@@ -13,7 +13,7 @@ class Node extends EventEmitter {
         this.pool = new Pool(name);
         this.routers = new Routers(this);
         
-        this.routers.use('http', new http({ node: this, port: port }));
+        this.routers.use('ws', new ws({ node: this, port: port }));
         this.routers.use('onion', new onion({ node: this }));
         this.routers.use('p2p', new p2p({ node: this }));
 
