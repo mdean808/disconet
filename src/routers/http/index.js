@@ -26,36 +26,42 @@ class http {
             body: {
                 content: msg
             },
-            json: true
+            json: true,
         }
         this.nonces[nonce] = resolve;
         request.post(reqOptions).on('response', (res) => {
-            res.setEncoding('binary');
+            res.setEncoding('hex');
             res.on('data', (data) => {
-                let payload = binary.deserialize(data);
-                if(payload.type == 'end') {
-                    this.nonces[nonce](payload.body);
-                } else if(payload.type == 'reply') {
-                    const nodeReq = {
-                        body: payload.body,
-                        nonce: payload.nonce,
-                        router: this,
-                        reply: (msg) => {
-                            let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-                            res.write(binary.serialize({
-                                nonce: id,
-                                body: msg
-                            }));
-                            return new Promise((resolveReply, rejectReply) => {
-                                this.nonces[id] = resolveReply;
-                            });                        
-                        },
-                        end: (msg) => {
-                            res.end(msg);
-                        }
-                    };
+                if (Buffer.from(data, 'hex').length > 5) {
+                    let payload = binary.deserialize(Buffer.from(data, 'hex'));
+                    if(payload.type == 'end') {
+                        this.nonces[nonce](payload.body);
+                    } else if(payload.type == 'reply') {
+                        const nodeReq = {
+                            body: payload.body,
+                            nonce: payload.nonce,
+                            router: this,
+                            reply: (msg) => {
+                                let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+                                res.write(binary.serialize({
+                                    nonce: id,
+                                    type: 'reply',
+                                    body: msg
+                                }));
+                                return new Promise((resolveReply, rejectReply) => {
+                                    this.nonces[id] = resolveReply;
+                                });                        
+                            },
+                            end: (msg) => {
+                                res.end(binary.serialize({
+                                    type: 'end',
+                                    body: msg
+                               }));
+                            }
+                        };
 
-                    this.nonces[nonce](nodeReq);
+                        this.nonces[nonce](nodeReq);
+                    }
                 }
             });
         });
@@ -81,6 +87,7 @@ class http {
                         let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                         res.write(binary.serialize({
                             nonce: id,
+                            type: 'reply',
                             body: msg
                         }));
                         return new Promise((resolve, reject) => {
@@ -88,7 +95,10 @@ class http {
                         });                        
                     },
                     end: (msg) => {
-                        res.end(msg);
+                        res.end(binary.serialize({
+                            type: 'end',
+                            body: msg
+                       }));
                     }
                 };
                 this.node.receive(nodeReq);
