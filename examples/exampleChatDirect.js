@@ -9,7 +9,7 @@ let peerAddress = "";
 let port = parseInt(Math.random() * 500) + 8000;
 console.log('Initialized new node Example Chat')
 console.log(`Node running on port ${port}`);
-console.log(`Give this IP to your friend: http/${ip.address()}:${port}`);
+console.log(`Give this IP to your friend: ws/${ip.address()}:${port}`);
 rl.question('connect>', (answer) => {
   console.log(`Connecting to: ${answer}`);
   peerAddress = answer;
@@ -39,5 +39,5 @@ exampleChat.on('ready', async () => {
 });
 
 exampleChat.on('message', async (msg) => {
-    console.log(`friend> ${msg}`);
+    console.log(`friend> ${msg.body}`);
 });
