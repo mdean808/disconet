@@ -48,6 +48,7 @@ exampleChat.on('ready', async () => {
     while (!exit) {
       let mes = await prompt('say>');
       if (mes === 'exit') return exit = true
+      console.log(`you> ${mes}`);
 
       friend.send(mes);
     }
@@ -55,6 +56,7 @@ exampleChat.on('ready', async () => {
 });
 
 exampleChat.on('message', async (msg) => {
+  console.log(msg);
   console.log(`friend> ${msg.body}`);
 });
 
