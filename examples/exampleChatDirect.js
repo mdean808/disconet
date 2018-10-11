@@ -14,6 +14,8 @@ console.log(`Give this IP to your friend: ws/${ip.address()}:${port}`);
 const { Node, Peer } = require('../src/main.js') // change to finjs for release
 let exampleChat = new Node('exampleChat', {port: port});
 exampleChat.on('ready', async () => {
+  let exit = false
+  while(!exit) {
   rl.question('connect>', (answer) => {
     console.log(`Connecting to: ${answer}`);
     peerAddress = answer;
@@ -28,11 +30,14 @@ exampleChat.on('ready', async () => {
 
     rlchat.question('say>', (mes) => {
       console.log(`you> ${mes}`);
+      if (mes === 'exit') return exit = true
+      
       friend.send(mes);
     
       rlchat.close();
     });
     });
+  }
 });
 
 exampleChat.on('message', async (msg) => {

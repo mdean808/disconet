@@ -8,7 +8,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "testChat": "node ./examples/exampleChatDirect.js",
+    "testExample": "node ./examples/example.js",
     "build": "uglifyjs --compress --mangle ./src/main.js --output ./dist/main.min.js"
   },
   "repository": {
