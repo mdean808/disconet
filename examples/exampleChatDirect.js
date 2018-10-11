@@ -19,7 +19,7 @@ function prompt(question) {
     });
 
     rlchat.question(question, (mes) => {
-      res(question);
+      res(mes);
       rlchat.close();
     });
   });
@@ -56,7 +56,6 @@ exampleChat.on('ready', async () => {
 });
 
 exampleChat.on('message', async (msg) => {
-  console.log(msg);
   console.log(`friend> ${msg.body}`);
 });
 
