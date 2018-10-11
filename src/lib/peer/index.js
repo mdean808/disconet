@@ -13,6 +13,13 @@ class Peer {
             splitAddress(this.node, this.address).router.send(msg, this.address, res); // send message using specified router mode to address
         });
     }
+    push(msg) {
+        if (!msg)
+            throw new Error("No message found.")
+        if (!this.address)
+            throw new Error("No address found.")
+        splitAddress(this.node, this.address).router.push(msg, this.address); // send message using specified router mode to address
+    }
 }
 
 module.exports = Peer;
@@ -23,6 +30,7 @@ function splitAddress(node, addr) {
         throw new Error("Incorrect address specified.")
     }
     const router = addr.split('/')[0]
+    console.log('Router', router);
     const path = addr.split('/')[1]
     return {
         router: node.routers.get(router),

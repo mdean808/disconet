@@ -16,32 +16,24 @@ class ws {
         this.node = node
         this.nonces = {};
     }
-    send(msg, address, resolve) {
-        const nonce = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+    sendRaw(data, address) {
         const ws = new WebSocket('ws://' + address.split('/').splice(1).join('/') + '/receive');
-        this.nonces[nonce] = resolve;
         ws.on('open', () => {
-            ws.send(binary.serialize({
-                headers: {
-                    'nonce': nonce,
-                },
-                body: {
-                    content: msg
-                }
-            }));
+            ws.send(data);
         })
         ws.on('message', (data) => {
             let payload = binary.deserialize(data);
             if(payload.type == 'end') {
-                this.nonces[nonce](payload.body);
+                this.nonces[payload.oldNonce](payload.body);
             } else if(payload.type == 'reply') {
                 const nodeReq = {
-                body: payload.body,
-                nonce: payload.nonce,
-                router: this,
-                reply: (msg) => {
-                    let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+                    body: payload.body,
+                    nonce: payload.nonce,
+                    router: this,
+                    reply: (msg) => {
+                        let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                         ws.send(binary.serialize({
+                            oldNonce: payload.nonce,
                             nonce: id,
                             type: 'reply',
                             body: msg
@@ -50,80 +42,51 @@ class ws {
                             this.nonces[id] = resolveReply;
                         });                        
                     },
-                end: (msg) => {
-                    //todo: correct way to close the websocket w/ a message????
-                    res.end(binary.serialize({
-                        type: 'end',
-                        body: msg
-                    }));
-                }
-            };
-            this.nonces[nonce](nodeReq);
-        }
-        });
-        // to be removed
-        const reqOptions = {
-            headers: {
-                'nonce': nonce,
-            },
-            body: {
-                content: msg
-            },
-            json: true,
-        }
-        request.post(reqOptions).on('response', (res) => {
-            res.setEncoding('hex');
-            res.on('data', (data) => {
-                if (Buffer.from(data, 'hex').length > 5) {
-                    let payload = binary.deserialize(Buffer.from(data, 'hex'));
-                    if(payload.type == 'end') {
-                        this.nonces[nonce](payload.body);
-                    } else if(payload.type == 'reply') {
-                        const nodeReq = {
-                            body: payload.body,
-                            nonce: payload.nonce,
-                            router: this,
-                            reply: (msg) => {
-                                let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-                                res.write(binary.serialize({
-                                    nonce: id,
-                                    type: 'reply',
-                                    body: msg
-                                }));
-                                return new Promise((resolveReply, rejectReply) => {
-                                    this.nonces[id] = resolveReply;
-                                });                        
-                            },
-                            end: (msg) => {
-                                res.end(binary.serialize({
-                                    type: 'end',
-                                    body: msg
-                               }));
-                            }
-                        };
-
-                        this.nonces[nonce](nodeReq);
+                    end: (msg) => {
+                        ws.send(binary.serialize({
+                            oldNonce: payload.nonce,
+                            type: 'end',
+                            body: msg
+                        }));                       
                     }
-                }
-            });
+                };
+                this.nonces[payload.oldNonce](nodeReq);
+            }
         });
+    }
+    push(msg, address) {
+        this.sendRaw(binary.serialize({
+            type: 'end',
+            body: msg
+        }), address)
+    }
+    send(msg, address, resolve) {
+        const nonce = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+        this.nonces[nonce] = resolve;
+        this.sendRaw(binary.serialize({
+            type: 'send',
+            nonce: nonce,
+            body: msg
+        }), address, resolve);
     }
     getPeers() {
 
     }
     listen() {
         return new Promise((res, rej) => {
-            const wss = new WebSocket.Server({ port: this.port });
+            const wss = new WebSocket.Server({ port: this.port }, res);
             wss.on('connection', (ws) => {
                 ws.on('message', (message) => {
-                    let message = binary.deserialize(message)
+                    message = binary.deserialize(message)
                     const nodeReq = {
                         body: message.body,
                         nonce: message.nonce,
                         router: this,
+                        readOnly: false,
                         reply: (msg) => {
                             let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
                             ws.send(binary.serialize({
+                                oldNonce: message.nonce,
                                 nonce: id,
                                 type: 'reply',
                                 body: msg
@@ -134,46 +97,31 @@ class ws {
                         },
                         end: (msg) => {
                             // somehow close ws
-                            res.end(binary.serialize({
+                            let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+                            ws.send(binary.serialize({
+                                oldNonce: message.nonce,
                                 type: 'end',
                                 body: msg
-                           }));
+                            }));
+                            ws.close();
                         }
                     };
-                });  
-            });
-            //to be removed
-            this.app.use(bodyParser.json())
-            this.app.listen(this.port, res);
-            this.app.post('/receive', (req, res) => {
-                res.writeHead(200, {
-                    'Content-Type': 'text/plain',
-                    'Transfer-Encoding': 'chunked'
-                });
-
-                const nodeReq = {
-                    body: req.body.content,
-                    nonce: req.get('nonce'),
-                    router: this,
-                    reply: (msg) => {
-                        let id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-                        res.write(binary.serialize({
-                            nonce: id,
-                            type: 'reply',
-                            body: msg
-                        }));
-                        return new Promise((resolve, reject) => {
-                            this.nonces[id] = resolve;
-                        });                        
-                    },
-                    end: (msg) => {
-                        res.end(binary.serialize({
-                            type: 'end',
-                            body: msg
-                       }));
+                    if(message.type == 'send') {
+                        this.node.receive(nodeReq);
+                    } else if(message.type == 'reply') {
+                        this.nonces[message.oldNonce](nodeReq);
+                    } else if(message.type == 'end') {
+                        if(message.oldNonce)
+                            this.nonces[message.oldNonce](message.body);
+                        else {
+                            delete nodeReq.reply;
+                            delete nodeReq.end;
+                            nodeReq.readOnly = true;
+                            this.node.receive(nodeReq);
+                        }
+                        ws.close();
                     }
-                };
-                this.node.receive(nodeReq);
+                });  
             });
         });
     }
