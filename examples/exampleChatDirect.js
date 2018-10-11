@@ -17,16 +17,15 @@ let inputField = null;
 
 function prompt(question) {
   return new Promise((res, rej) => {
+    let rlchat = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
 
-    term.move(1, 1 + height);
-    term.bold('say> ');
-
-    inputField = term.inputField(
-      function( error , input ) {
-        if(error) res();
-        res(input);
-      }
-    ) ;
+    rlchat.question(question, (mes) => {
+      res(mes);
+      rlchat.close();
+    });
   });
 }
 
@@ -48,7 +47,7 @@ function renderChat() {
   for(let i = 0; i < Math.min(history.length, height); i++) {
     term.move(1, 1 + i);
     term.eraseLine();
-    term(history[(history.length - Math.min(history.length, height)) + i]);
+    term.magenta(history[(history.length - Math.min(history.length, height)) + i]);
   }
 
   inputField.redraw();
@@ -65,23 +64,25 @@ exampleChat.on('ready', async () => {
     })
     rl.close();
 
-    term.clear();
-
+    //term.clear();
+    console.log('Initate the coversation');
     while (!exit) {
-      let mes = await prompt('say>');
+      let mes = await prompt('');
       if (mes === 'exit') return exit = true
-
-      history.push(`you> ${mes}`);
-
-      friend.send(mes);
-      renderChat();
+      //console.log(`\nyou> ${mes}`)
+      //history.push(`\nyou> ${mes}`);
+      if (mes) friend.send(mes).catch(e => {
+        console.log(e);
+      })
+      //renderChat();
     }
   });
 });
 
 exampleChat.on('message', async (msg) => {
-  history.push(`friend> ${msg.body}`);
-  renderChat();
+  console.log(`\nfriend> ${msg.body}`)
+  //history.push(`\nfriend> ${msg.body}`);
+  //renderChat();
 });
 
 exampleChat.listen();

@@ -2,7 +2,6 @@
 A framework for easily creating decentralized applications in NodeJS
 
 ## Testing
-----
 1. Clone the Repository
 2. Run `npm run testExample` to communicate with yourself using websockets.
 3. Run `npm run testChat` to have a direct chat with a friend who also ran the command using websockets.
@@ -56,5 +55,4 @@ exampleApp.on('message', async (msg) => {
 ```
 
 ## Examples
----
 Browse the `examples` directory.
