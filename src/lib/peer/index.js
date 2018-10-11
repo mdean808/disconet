@@ -30,7 +30,7 @@ function splitAddress(node, addr) {
         throw new Error("Incorrect address specified.")
     }
     const router = addr.split('/')[0]
-    console.log('Router', router);
+    //console.log('Router:', router);
     const path = addr.split('/')[1]
     return {
         router: node.routers.get(router),

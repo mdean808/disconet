@@ -5,23 +5,28 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
+const term = require( 'terminal-kit' ).terminal ;
+
 let peerAddress = "";
 let port = parseInt(Math.random() * 500) + 8000;
 console.log('Initialized new node Example Chat')
 console.log(`Node running on port ${port}`);
 console.log(`Give this IP to your friend: ws/${ip.address()}:${port}`);
 
+let inputField = null;
+
 function prompt(question) {
   return new Promise((res, rej) => {
-    let rlchat = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
 
-    rlchat.question(question, (mes) => {
-      res(mes);
-      rlchat.close();
-    });
+    term.move(1, 1 + height);
+    term.bold('say> ');
+
+    inputField = term.inputField(
+      function( error , input ) {
+        if(error) res();
+        res(input);
+      }
+    ) ;
   });
 }
 
@@ -34,6 +39,21 @@ let exampleChat = new Node('exampleChat', {
   port: port
 });
 
+let height = 5;
+let history = [];
+
+function renderChat() {
+  term.clear();
+
+  for(let i = 0; i < Math.min(history.length, height); i++) {
+    term.move(1, 1 + i);
+    term.eraseLine();
+    term(history[(history.length - Math.min(history.length, height)) + i]);
+  }
+
+  inputField.redraw();
+}
+
 exampleChat.on('ready', async () => {
   let exit = false
   rl.question('connect>', async (answer) => {
@@ -45,18 +65,23 @@ exampleChat.on('ready', async () => {
     })
     rl.close();
 
+    term.clear();
+
     while (!exit) {
       let mes = await prompt('say>');
       if (mes === 'exit') return exit = true
-      console.log(`you> ${mes}`);
+
+      history.push(`you> ${mes}`);
 
       friend.send(mes);
+      renderChat();
     }
   });
 });
 
 exampleChat.on('message', async (msg) => {
-  console.log(`friend> ${msg.body}`);
+  history.push(`friend> ${msg.body}`);
+  renderChat();
 });
 
 exampleChat.listen();
