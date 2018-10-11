@@ -17,25 +17,21 @@ exampleChat.on('ready', async () => {
   rl.question('connect>', (answer) => {
     console.log(`Connecting to: ${answer}`);
     peerAddress = answer;
+    var friend = new Peer({node: exampleChat, address: peerAddress})
+    rl.close();
+  
+    let rlchat = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
 
 
-      var friend = new Peer({node: exampleChat, address: peerAddress})
+    rlchat.question('say>', (mes) => {
+      console.log(`you> ${mes}`);
+      friend.send(mes);
     
-      let rlchat = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
-
-      rlchat.question('say>', (answer) => {
-        console.log(`you> ${answer}`);
-        peerAddress = answer;
-
-        friend.send(answer);
-      
-        rlchat.close();
-      });
-
-      rl.close();
+      rlchat.close();
+    });
     });
 });
 
