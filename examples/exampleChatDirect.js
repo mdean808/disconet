@@ -29,9 +29,11 @@ const {
   Node,
   Peer
 } = require('../src/main.js') // change to finjs for release
+
 let exampleChat = new Node('exampleChat', {
   port: port
 });
+
 exampleChat.on('ready', async () => {
   let exit = false
   rl.question('connect>', async (answer) => {
