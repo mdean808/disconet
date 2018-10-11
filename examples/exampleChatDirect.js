@@ -11,37 +11,49 @@ console.log('Initialized new node Example Chat')
 console.log(`Node running on port ${port}`);
 console.log(`Give this IP to your friend: ws/${ip.address()}:${port}`);
 
-const { Node, Peer } = require('../src/main.js') // change to finjs for release
-let exampleChat = new Node('exampleChat', {port: port});
-exampleChat.on('ready', async () => {
-  let exit = false
-  while(!exit) {
-  rl.question('connect>', (answer) => {
-    console.log(`Connecting to: ${answer}`);
-    peerAddress = answer;
-    var friend = new Peer({node: exampleChat, address: peerAddress})
-    rl.close();
-  
+function prompt(question) {
+  return new Promise((res, rej) => {
     let rlchat = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     });
 
-
-    rlchat.question('say>', (mes) => {
-      console.log(`you> ${mes}`);
-      if (mes === 'exit') return exit = true
-      
-      friend.send(mes);
-    
+    rlchat.question(question, (mes) => {
+      res(question);
       rlchat.close();
     });
-    });
-  }
+  });
+}
+
+const {
+  Node,
+  Peer
+} = require('../src/main.js') // change to finjs for release
+let exampleChat = new Node('exampleChat', {
+  port: port
+});
+exampleChat.on('ready', async () => {
+  let exit = false
+  rl.question('connect>', async (answer) => {
+    console.log(`Connecting to: ${answer}`);
+    peerAddress = answer;
+    var friend = new Peer({
+      node: exampleChat,
+      address: peerAddress
+    })
+    rl.close();
+
+    while (!exit) {
+      let mes = await prompt('say>');
+      if (mes === 'exit') return exit = true
+
+      friend.send(mes);
+    }
+  });
 });
 
 exampleChat.on('message', async (msg) => {
-    console.log(`friend> ${msg.body}`);
+  console.log(`friend> ${msg.body}`);
 });
 
 exampleChat.listen();
