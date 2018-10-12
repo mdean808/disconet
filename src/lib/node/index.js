@@ -10,7 +10,7 @@ const ec = new EC('secp256k1');
 const dgram = require('dgram');
 
 const PORT = 49410;
-const MCAST_ADDR = '238.45.142.53';
+const MCAST_ADDR = "230.185.192.108";
         
 let easterEgg = false;
 // special port is 9410 
@@ -39,7 +39,15 @@ class Node extends EventEmitter {
         for(let i = 0; i < vals.length; i++) {
             await vals[i].listen(); 
         }
+        let socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
+        /*socket.on('listening', function () {
+            var address = socket.address();
+            console.log('UDP Client listening on ' + address.address + ":" + address.port);
+            socket.setBroadcast(true)
+            socket.setMulticastTTL(128); 
+            socket.addMembership(MCAST_ADDR);
+        });*/
         this.emit('ready');
     }
 
@@ -51,23 +59,21 @@ class Node extends EventEmitter {
             socket.addMembership(MCAST_ADDR);
         });
 
-        socket.on('listening', function () {
+        /*socket.on('listening', function () {
             var address = socket.address();
             console.log('UDP Client listening on ' + address.address + ":" + address.port);
             socket.setBroadcast(true)
             socket.setMulticastTTL(128); 
             socket.addMembership(MCAST_ADDR);
-        });
+        });*/
         
         socket.on('message', function (message, remote) {   
             console.log('MCast Msg: From: ' + remote.address + ':' + remote.port +' - ' + message);
         });
-        
-        setInterval(() => {
-            var message = new Buffer(news[Math.floor(Math.random()*news.length)]);
-            server.send(message, 0, message.length, PORT,MCAST_ADDR);
-            console.log("Sent " + message + " to the wire...");
-        }, 3000);
+        const news = ['hello there', 'general kenoBI!']
+        var message = new Buffer(news[Math.floor(Math.random()*news.length)]);
+        socket.send(message, 0, message.length, PORT, MCAST_ADDR);
+        console.log("Sent " + message + " to the wire...");
     }
 
     fetchPeers() {
@@ -82,4 +88,4 @@ class Node extends EventEmitter {
         console.log(`Nice job, ${name}!`);
     }
 }
-module.exports = {Node, easterEgg};
+module.exports = Node;
