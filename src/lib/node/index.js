@@ -5,7 +5,7 @@ const ws = require('../../routers/ws');
 const onion = require('../../routers/onion');
 const p2p = require('../../routers/p2p');
 const EC = require('elliptic').ec;
- 
+const log = require('npmlog');
 const ec = new EC('secp256k1');
 const dgram = require('dgram');
 
@@ -71,9 +71,9 @@ class Node extends EventEmitter {
             console.log('MCast Msg: From: ' + remote.address + ':' + remote.port +' - ' + message);
         });
         const news = ['hello there', 'general kenoBI!']
-        var message = new Buffer(news[Math.floor(Math.random()*news.length)]);
+        var message = Buffer.from(news[Math.floor(Math.random()*news.length)]);
         socket.send(message, 0, message.length, PORT, MCAST_ADDR);
-        console.log("Sent " + message + " to the wire...");
+        log.info('Sent', message + ' to the wire')
     }
 
     fetchPeers() {
