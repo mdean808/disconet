@@ -58,7 +58,7 @@ class Node extends EventEmitter {
             socket.addMembership(MCAST_ADDR);
         });
         
-        socket.on('message', function (message, remote) {  
+        socket.on('message', (message, remote) => {  
             let payload = JSON.parse(message);
             let address =  `ws/${remote.address}:${payload.port}`;
             this.addPeer(new Peer({ node: this, address: address }));
