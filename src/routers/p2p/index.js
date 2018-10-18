@@ -2,10 +2,10 @@ class p2p {
     constructor() {
 
     }
-    send() {
+    send(peer) {
 
     }
-    getPeers() {
+    getPeers(peer) {
 
     }
     listen() {

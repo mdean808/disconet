@@ -25,12 +25,11 @@ class Node extends EventEmitter {
         this.routers.use('ws', new ws({ node: this, port: port }));
         this.routers.use('onion', new onion({ node: this }));
         this.routers.use('p2p', new p2p({ node: this }));
-
+        
         this.nonces = {};
-        this.peers = [];                
-                
-        this.directKey = ec.genKeyPair();
-        this.indirectKey = ec.genKeyPair();
+        this.peers = [];
+
+        this.routerKey = ec.genKeyPair();
     }
     
     async listen() {
@@ -39,14 +38,6 @@ class Node extends EventEmitter {
             await vals[i].listen(); 
         }
         let socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
-
-        /*socket.on('listening', function () {
-            var address = socket.address();
-            console.log('UDP Client listening on ' + address.address + ":" + address.port);
-            socket.setBroadcast(true)
-            socket.setMulticastTTL(128); 
-            socket.addMembership(MCAST_ADDR);
-        });*/
         this.emit('ready');
     }
 
@@ -61,27 +52,45 @@ class Node extends EventEmitter {
         socket.on('message', (message, remote) => {  
             let payload = JSON.parse(message);
             let address =  `ws/${remote.address}:${payload.port}`;
-            this.addPeer(new Peer({ node: this, address: address }));
-            console.log('MCast received by ' + address); 
+            this.addPeer(new Peer({ node: this, address: address, publicKey: Buffer.from(payload.publicKey, 'hex') }));
+            console.log('\x1b[36mMCast received by ' + address, '\x1b[0m'); 
         });
 
         var message = Buffer.from(JSON.stringify({
-            port: this.port
+            port: this.port,
+            publicKey: routerKey.getPublic('hex')
         }));
         socket.send(message, 0, message.length, PORT, MCAST_ADDR);
-        console.log('\x1b[36m', 'Presence brodcasted to LAN', '\x1b[0m')
+        console.log('\x1b[36mPresence brodcasted to LAN', '\x1b[0m')
     }
-
-    fetchPeers() {
-
-    }
-
-    addPeer(peer) {
+    
+    addPeer(peer, initialize = true) {
+        if(peer.publicKey.toString('hex') == this.routerKey.getPublic('hex'))
+            return;
+        
+        console.log("added " + peer.address);
         this.peers.push(peer);
+        let newPeers = await peer.requestPeers();
+        newPeers.forEach(newPeer => {
+            if(!this.peers.any(x => x.address == newPeer.address)) {
+                this.addPeer(new Peer({ node: this, address: newPeer.address, publicKey: Buffer.from(newPeer.publicKey, 'hex') }), false);
+            }
+        });
     }
 
-    receive(req, res) {
-        this.emit('message', req, res);
+    receive(msg) {
+        switch(msg.data.__packet__) {
+            case 'get_peers':
+                msg.end(peers.map(x => {
+                    return {
+                        address: x.address,
+                        publicKey: x.publicKey
+                    };
+                }));
+                break;
+            default:
+                this.emit('message', msg);
+        }
     }
 
     easter(name) {

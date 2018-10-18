@@ -1,24 +1,33 @@
 const Router = require('../../routers')
 class Peer {
-    constructor ({node, address}) {
+    constructor ({node, address, publicKey = null}) {
         this.node = node;
         this.address = address;
+        this.publicKey = publicKey;
     }
+
     send(msg) {
         if (!msg)
             throw new Error("No message found.")
         if (!this.address)
             throw new Error("No address found.")
         return new Promise((res, rej) => {
-            splitAddress(this.node, this.address).router.send(msg, this.address, res); // send message using specified router mode to address
+            splitAddress(this.node, this.address).router.send(msg, this.address, res, this); // send message using specified router mode to address
         });
     }
+
     push(msg) {
         if (!msg)
             throw new Error("No message found.")
         if (!this.address)
             throw new Error("No address found.")
-        splitAddress(this.node, this.address).router.push(msg, this.address); // send message using specified router mode to address
+        splitAddress(this.node, this.address).router.push(msg, this.address, this); // send message using specified router mode to address
+    }
+
+    requestPeers() {
+        return this.send({
+            _packet__: 'get_peers'
+        })
     }
 }
 
