@@ -5,7 +5,6 @@ const ws = require('../../routers/ws');
 const onion = require('../../routers/onion');
 const p2p = require('../../routers/p2p');
 const EC = require('elliptic').ec;
-const log = require('npmlog');
 const ec = new EC('secp256k1');
 const dgram = require('dgram');
 
@@ -21,6 +20,7 @@ class Node extends EventEmitter {
         this.pool = new Pool(name);
         this.routers = new Routers(this);
         
+        this.port = port;
         this.routers.use('ws', new ws({ node: this, port: port }));
         this.routers.use('onion', new onion({ node: this }));
         this.routers.use('p2p', new p2p({ node: this }));
@@ -30,8 +30,6 @@ class Node extends EventEmitter {
                 
         this.directKey = ec.genKeyPair();
         this.indirectKey = ec.genKeyPair();
-
-        this.findLocalPeers();
     }
     
     async listen() {
@@ -58,22 +56,19 @@ class Node extends EventEmitter {
             socket.setMulticastTTL(128);
             socket.addMembership(MCAST_ADDR);
         });
-
-        /*socket.on('listening', function () {
-            var address = socket.address();
-            console.log('UDP Client listening on ' + address.address + ":" + address.port);
-            socket.setBroadcast(true)
-            socket.setMulticastTTL(128); 
-            socket.addMembership(MCAST_ADDR);
-        });*/
         
-        socket.on('message', function (message, remote) {   
-            console.log('MCast Msg: From: ' + remote.address + ':' + remote.port +' - ' + message);
+        socket.on('message', function (message, remote) {  
+            let payload = JSON.parse(message);
+            let address =  `ws/${remote.address}:${payload.port}`;
+            addPeer(new Peer({ node: this, address: address }));
+            console.log('MCast received by ' + address); 
         });
-        const news = ['hello there', 'general kenoBI!']
-        var message = Buffer.from(news[Math.floor(Math.random()*news.length)]);
+
+        var message = Buffer.from(JSON.stringify({
+            port: this.port
+        }));
         socket.send(message, 0, message.length, PORT, MCAST_ADDR);
-        log.info('Sent', message + ' to the wire')
+        console.log('\x1b[36m', 'Presence brodcasted to LAN', '\x1b[0m')
     }
 
     fetchPeers() {
