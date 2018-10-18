@@ -7,6 +7,7 @@ const p2p = require('../../routers/p2p');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 const dgram = require('dgram');
+const Peer = require('../peer');
 
 const PORT = 49410;
 const MCAST_ADDR = "230.185.192.108";
