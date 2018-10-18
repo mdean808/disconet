@@ -113,7 +113,7 @@ class ws {
                     } else if(message.type == 'end') {
                         if(message.oldNonce)
                             this.nonces[message.oldNonce](message.body);
-                        else {
+                        else { //TODO: change this to if(message.type == 'sendOnce')
                             delete nodeReq.reply;
                             delete nodeReq.end;
                             nodeReq.readOnly = true;

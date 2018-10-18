@@ -70,6 +70,8 @@ class Node extends EventEmitter {
         
         console.log("added " + peer.address);
         this.peers.push(peer);
+
+        if(!initialize) return;
         let newPeers = await peer.requestPeers();
         newPeers.forEach(newPeer => {
             if(!this.peers.any(x => x.address == newPeer.address)) {
