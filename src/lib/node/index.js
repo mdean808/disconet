@@ -75,9 +75,14 @@ class Node extends EventEmitter {
 
     }
 
+    addPeer(peer) {
+        this.peers.push(peer);
+    }
+
     receive(req, res) {
         this.emit('message', req, res);
     }
+
     easter(name) {
         easterEgg = true;
         console.log(`Nice job, ${name}!`);
