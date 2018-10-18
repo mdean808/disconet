@@ -60,7 +60,7 @@ class Node extends EventEmitter {
         socket.on('message', function (message, remote) {  
             let payload = JSON.parse(message);
             let address =  `ws/${remote.address}:${payload.port}`;
-            addPeer(new Peer({ node: this, address: address }));
+            this.addPeer(new Peer({ node: this, address: address }));
             console.log('MCast received by ' + address); 
         });
 
