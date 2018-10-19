@@ -63,7 +63,7 @@ class Node extends EventEmitter {
 
         var message = Buffer.from(JSON.stringify({
             port: this.port,
-            publicKey: routerKey.getPublic('hex')
+            publicKey: this.routerKey.getPublic('hex')
         }));
         socket.send(message, 0, message.length, PORT, MCAST_ADDR);
         console.log('\x1b[36mPresence brodcasted to LAN', '\x1b[0m')
