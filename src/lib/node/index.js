@@ -70,7 +70,7 @@ class Node extends EventEmitter {
     }
     
     async addPeer(peer, initialize = true) {
-        if(peer.publicKey.toString('hex') == this.routerKey.getPublic('hex'))
+        if(this.peers.any(x => x.address == peer.address))
             return;
         
         console.log("added " + peer.address);
