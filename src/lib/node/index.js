@@ -15,7 +15,7 @@ const MCAST_ADDR = "230.185.192.108";
 let easterEgg = false;
 // special port is 9410 
 class Node extends EventEmitter {
-    constructor(name, { port = 9410 }) {
+    constructor(name, { port = 9410, findLocalPeers = true }) {
         super();
         this.name = name;
         this.pool = new Pool(name);
@@ -30,6 +30,7 @@ class Node extends EventEmitter {
         this.peers = [];
 
         this.routerKey = ec.genKeyPair();
+        this.shouldBroadcastLAN = findLocalPeers;
     }
     
     async listen() {
@@ -37,6 +38,10 @@ class Node extends EventEmitter {
         for(let i = 0; i < vals.length; i++) {
             await vals[i].listen(); 
         }
+        
+        if(this.shouldBroadcastLAN)
+            this.findLocalPeers();
+
         let socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
         this.emit('ready');
     }
@@ -49,10 +54,10 @@ class Node extends EventEmitter {
             socket.addMembership(MCAST_ADDR);
         });
         
-        socket.on('message', (message, remote) => {  
+        socket.on('message', async (message, remote) => {  
             let payload = JSON.parse(message);
             let address =  `ws/${remote.address}:${payload.port}`;
-            this.addPeer(new Peer({ node: this, address: address, publicKey: Buffer.from(payload.publicKey, 'hex') }));
+            await this.addPeer(new Peer({ node: this, address: address, publicKey: Buffer.from(payload.publicKey, 'hex') }));
             console.log('\x1b[36mMCast received by ' + address, '\x1b[0m'); 
         });
 
@@ -64,7 +69,7 @@ class Node extends EventEmitter {
         console.log('\x1b[36mPresence brodcasted to LAN', '\x1b[0m')
     }
     
-    addPeer(peer, initialize = true) {
+    async addPeer(peer, initialize = true) {
         if(peer.publicKey.toString('hex') == this.routerKey.getPublic('hex'))
             return;
         
@@ -81,7 +86,7 @@ class Node extends EventEmitter {
     }
 
     receive(msg) {
-        switch(msg.data.__packet__) {
+        switch(msg.data == null ? null : msg.data.__packet__) {
             case 'get_peers':
                 msg.end(peers.map(x => {
                     return {

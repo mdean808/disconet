@@ -8,7 +8,7 @@ exampleApp.on('ready', async () => {
     //console.log(await exampleApp.fetchPeers()); // should include self
 
     var bob = new Peer({node: exampleApp, address: 'ws/127.0.0.1:8082'})
-    exampleApp.findLocalPeers();
+    
     let helloWorld = await bob.send("Hello!").catch(e => {
         console.log('Error', e);
     }); // create new conversation
