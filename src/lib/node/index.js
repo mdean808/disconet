@@ -70,18 +70,22 @@ class Node extends EventEmitter {
     }
     
     async addPeer(peer, initialize = true) {
-        if(this.peers.any(x => x.address == peer.address))
+        if(this.peers.some(x => x.address == peer.address))
             return;
         
         console.log("added " + peer.address);
         this.peers.push(peer);
+        console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(this.peers.map(x => {
+            return {
+                address: x.address,
+                publicKey: x.publicKey.toString('hex')
+            };
+        })));
 
         if(!initialize) return;
         let newPeers = await peer.requestPeers();
         newPeers.forEach(newPeer => {
-            if(!this.peers.any(x => x.address == newPeer.address)) {
-                this.addPeer(new Peer({ node: this, address: newPeer.address, publicKey: Buffer.from(newPeer.publicKey, 'hex') }), false);
-            }
+            this.addPeer(new Peer({ node: this, address: newPeer.address, publicKey: Buffer.from(newPeer.publicKey, 'hex') }), false);
         });
     }
 
@@ -90,7 +94,7 @@ class Node extends EventEmitter {
         switch(msg.body.__packet__) {
             case 'get_peers':
                 console.log("responding w/ peer list");
-                msg.end(peers.map(x => {
+                msg.end(this.peers.map(x => {
                     return {
                         address: x.address,
                         publicKey: x.publicKey
