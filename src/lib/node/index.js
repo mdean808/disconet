@@ -86,8 +86,9 @@ class Node extends EventEmitter {
     }
 
     receive(msg) {
-        switch(msg.data == null ? null : msg.data.__packet__) {
+        switch(msg.body.__packet__) {
             case 'get_peers':
+                console.log("responding w/ peer list");
                 msg.end(peers.map(x => {
                     return {
                         address: x.address,
