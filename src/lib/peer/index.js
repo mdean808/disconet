@@ -26,7 +26,7 @@ class Peer {
 
     requestPeers() {
         return this.send({
-            _packet__: 'get_peers'
+            __packet__: 'get_peers'
         })
     }
 }
