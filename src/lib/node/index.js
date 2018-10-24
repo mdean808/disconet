@@ -28,6 +28,7 @@ class Node extends EventEmitter {
         
         this.nonces = {};
         this.peers = [];
+        this.localPeers = [];
 
         this.routerKey = ec.genKeyPair();
         this.shouldBroadcastLAN = findLocalPeers;
@@ -90,7 +91,7 @@ class Node extends EventEmitter {
     }
 
     receive(msg) {
-        console.log(msg.body.__packet__);
+        console.log("Message Packet:", msg.body.__packet__);
         switch(msg.body.__packet__) {
             case 'get_peers':
                 console.log("responding w/ peer list");
