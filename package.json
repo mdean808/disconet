@@ -8,8 +8,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "testChat": "node ./examples/exampleChatDirect.js",
-    "testExample": "node ./examples/example.js",
+    "chat": "node ./examples/exampleChatDirect.js",
+    "example": "node ./examples/example.js",
     "build": "uglifyjs --compress --mangle ./src/main.js --output ./dist/main.min.js"
   },
   "repository": {

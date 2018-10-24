@@ -84,7 +84,15 @@ class Node extends EventEmitter {
         })));
 
         if(!initialize) return;
+        console.log("requestin peers from da pal peer");
         let newPeers = await peer.requestPeers();
+        console.log("swiggity swooty got a response");
+        console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(this.peers.map(x => {
+            return {
+                address: x.address,
+                publicKey: x.publicKey.toString('hex')
+            };
+        })));
         newPeers.forEach(newPeer => {
             this.addPeer(new Peer({ node: this, address: newPeer.address, publicKey: Buffer.from(newPeer.publicKey, 'hex') }), false);
         });
@@ -92,9 +100,16 @@ class Node extends EventEmitter {
 
     receive(msg) {
         console.log("Message Packet:", msg.body.__packet__);
+
         switch(msg.body.__packet__) {
             case 'get_peers':
                 console.log("responding w/ peer list");
+                console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(this.peers.map(x => {
+                    return {
+                        address: x.address,
+                        publicKey: x.publicKey.toString('hex')
+                    };
+                })));
                 msg.end(this.peers.map(x => {
                     return {
                         address: x.address,
