@@ -58,8 +58,15 @@ class Node extends EventEmitter {
         socket.on('message', async (message, remote) => {  
             let payload = JSON.parse(message);
             let address =  `ws/${remote.address}:${payload.port}`;
-            await this.addPeer(new Peer({ node: this, address: address, publicKey: Buffer.from(payload.publicKey, 'hex') }));
-            console.log('\x1b[36mMCast received by ' + address, '\x1b[0m'); 
+            if(await this.addPeer(new Peer({ node: this, address: address, publicKey: Buffer.from(payload.publicKey, 'hex') }))) {
+                var message = Buffer.from(JSON.stringify({
+                    port: this.port,
+                    publicKey: this.routerKey.getPublic('hex')
+                }));
+                socket.send(message, 0, message.length, PORT, MCAST_ADDR);
+                console.log('\x1b[36mPresence brodcasted to LAN', '\x1b[0m')
+                console.log('\x1b[36mMCast received by ' + address, '\x1b[0m'); 
+            }
         });
 
         var message = Buffer.from(JSON.stringify({
@@ -72,7 +79,7 @@ class Node extends EventEmitter {
     
     async addPeer(peer, initialize = true) {
         if(this.peers.some(x => x.address == peer.address))
-            return;
+            return false;
         
         console.log("added " + peer.address);
         this.peers.push(peer);
@@ -83,11 +90,11 @@ class Node extends EventEmitter {
             };
         })));
 
-        if(!initialize) return;
-        console.log("requestin peers from da pal peer");
+        if(!initialize) return true;
+        console.log("requestin peers from da pal peer ( " + peer.address + " )");
         let newPeers = await peer.requestPeers();
-        console.log("swiggity swooty got a response");
-        console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(this.peers.map(x => {
+        console.log("swiggity swooty got a response from ( " + peer.address + " )");
+        console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(newPeers.map(x => {
             return {
                 address: x.address,
                 publicKey: x.publicKey.toString('hex')
@@ -96,6 +103,8 @@ class Node extends EventEmitter {
         newPeers.forEach(newPeer => {
             this.addPeer(new Peer({ node: this, address: newPeer.address, publicKey: Buffer.from(newPeer.publicKey, 'hex') }), false);
         });
+
+        return true;
     }
 
     receive(msg) {

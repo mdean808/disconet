@@ -47,7 +47,7 @@ class ws {
                             oldNonce: payload.nonce,
                             type: 'end',
                             body: msg
-                        }));                       
+                        }));
                     }
                 };
                 this.nonces[payload.oldNonce](nodeReq);
@@ -111,6 +111,7 @@ class ws {
                     } else if(message.type == 'reply') {
                         this.nonces[message.oldNonce](nodeReq);
                     } else if(message.type == 'end') {
+                        console.log(`${message.body} sent to nonce ${message.oldNonce}`);
                         if(message.oldNonce)
                             this.nonces[message.oldNonce](message.body);
                         else { //TODO: change this to if(message.type == 'sendOnce')
