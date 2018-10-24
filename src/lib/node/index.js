@@ -64,8 +64,6 @@ class Node extends EventEmitter {
                     publicKey: this.routerKey.getPublic('hex')
                 }));
                 socket.send(message, 0, message.length, PORT, MCAST_ADDR);
-                console.log('\x1b[36mPresence brodcasted to LAN', '\x1b[0m')
-                console.log('\x1b[36mMCast received by ' + address, '\x1b[0m'); 
             }
         });
 
@@ -74,7 +72,6 @@ class Node extends EventEmitter {
             publicKey: this.routerKey.getPublic('hex')
         }));
         socket.send(message, 0, message.length, PORT, MCAST_ADDR);
-        console.log('\x1b[36mPresence brodcasted to LAN', '\x1b[0m')
     }
     
     async addPeer(peer, initialize = true) {
@@ -82,24 +79,11 @@ class Node extends EventEmitter {
             return false;
         
         console.log("added " + peer.address);
+        console.log('\x1b[33m%s\x1b[0m', `Peer Connected ${peer.address}`);
         this.peers.push(peer);
-        console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(this.peers.map(x => {
-            return {
-                address: x.address,
-                publicKey: x.publicKey.toString('hex')
-            };
-        })));
 
         if(!initialize) return true;
-        console.log("requestin peers from da pal peer ( " + peer.address + " )");
         let newPeers = await peer.requestPeers();
-        console.log("swiggity swooty got a response from ( " + peer.address + " )");
-        console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(newPeers.map(x => {
-            return {
-                address: x.address,
-                publicKey: x.publicKey.toString('hex')
-            };
-        })));
         newPeers.forEach(newPeer => {
             this.addPeer(new Peer({ node: this, address: newPeer.address, publicKey: Buffer.from(newPeer.publicKey, 'hex') }), false);
         });
@@ -108,17 +92,8 @@ class Node extends EventEmitter {
     }
 
     receive(msg) {
-        console.log("Message Packet:", msg.body.__packet__);
-
         switch(msg.body.__packet__) {
             case 'get_peers':
-                console.log("responding w/ peer list");
-                console.log('\x1b[33m%s\x1b[0m', 'Peers: ' + JSON.stringify(this.peers.map(x => {
-                    return {
-                        address: x.address,
-                        publicKey: x.publicKey.toString('hex')
-                    };
-                })));
                 msg.end(this.peers.map(x => {
                     return {
                         address: x.address,

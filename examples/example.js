@@ -1,17 +1,17 @@
 
 const { Node, Peer } = require('../src/main.js') // change to finjs for release
 let exampleApp = new Node('example', {port: 8082});
-//console.log('Initialized new node Example App')
+console.log('Initialized new node Example App')
 exampleApp.on('ready', async () => {
-    //onsole.log('Example App Ready')
-    //console.log(await exampleApp.fetchPeers()); // should include self
+    console.log('Example App Ready')
+    console.log(await exampleApp.findLocalPeers()); // should include self
 
     var bob = new Peer({node: exampleApp, address: 'ws/127.0.0.1:8082'})
     
     let helloWorld = await bob.send("Hello!").catch(e => {
         console.log('Error', e);
     }); // create new conversation
-    //console.log('HelloWorld Result', helloWorld);
+    console.log('HelloWorld Result', helloWorld);
     //assert.strictEqual(helloWorld, 'World!');
     
     // create a new conversation because the last one was closed
@@ -27,20 +27,20 @@ exampleApp.on('ready', async () => {
 
     let newPush = await bob.push('Pushed data man');
 
-    //console.log('Test Completed!')
+    console.log('Test Completed!')
 });
 
 exampleApp.on('message', async (msg) => {
     if(msg.body == "Hello!") {
-        //console.log('Ending the convo the first time');
+        console.log('Ending the convo the first time');
         msg.end("World!"); // end the conversation
     }
 
-    //console.log("body:", msg.body);
+    console.log("body:", msg.body);
     if(msg.body.status == "incoming") {
-        //console.log("Body.msg:", msg.body.msg) // returns "Data"
+        console.log("Body.msg:", msg.body.msg) // returns "Data"
         let dataReply = await msg.reply("That is some super important data!"); // keep conversation open
-        //console.log("Datareply:", dataReply.body); // Thanks for your opinion
+        console.log("Datareply:", dataReply.body); // Thanks for your opinion
         dataReply.end("Welp, it was nice talking to ya"); // close the conversation -- open a new one with 'send()' to start again
     }
 });
