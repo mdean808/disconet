@@ -82,6 +82,8 @@ class Node extends EventEmitter {
         console.log('\x1b[33m%s\x1b[0m', `Peer Connected ${peer.address}`);
         this.peers.push(peer);
 
+        console.log('peer public key: p2p/' + peer.publicKey);
+
         if(!initialize) return true;
         let newPeers = await peer.requestPeers();
         newPeers.forEach(newPeer => {
