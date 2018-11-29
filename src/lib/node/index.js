@@ -47,6 +47,19 @@ class Node extends EventEmitter {
         this.emit('ready');
     }
 
+    resolvep2p(address) {
+        let circuit = [];
+        let randomPeers = shuffle(this.peers)
+        for (let i = 0; i < Math.min(3, randomPeers.length); i++) {
+            const newCircuitEntry = {
+                address: randomPeers[i].address,
+                publicKey: randomPeers[i].publicKey
+            }
+            circuit.push(newCircuitEntry)            
+        }
+        return circuit;
+    }
+
     findLocalPeers() {
         let socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
         socket.bind(PORT, () => {
@@ -82,7 +95,7 @@ class Node extends EventEmitter {
         console.log('\x1b[33m%s\x1b[0m', `Peer Connected ${peer.address}`);
         this.peers.push(peer);
 
-        console.log('peer public key: p2p/' + peer.publicKey);
+        console.log('peer public key: p2p/' + peer.publicKey.toString('hex'));
 
         if(!initialize) return true;
         let newPeers = await peer.requestPeers();
@@ -114,3 +127,22 @@ class Node extends EventEmitter {
     }
 }
 module.exports = Node;
+
+function shuffle(array) {
+    var currentIndex = array.length, temporaryValue, randomIndex;
+  
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+  
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+  
+      // And swap it with the current element.
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+  
+    return array;
+}

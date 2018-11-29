@@ -4,14 +4,12 @@ let exampleApp = new Node('example', {port: 8082});
 console.log('Initialized new node Example App')
 exampleApp.on('ready', async () => {
     console.log('Example App Ready')
-    console.log(await exampleApp.findLocalPeers()); // should include self
-
-    var bob = new Peer({node: exampleApp, address: 'ws/127.0.0.1:8082'})
     
+    var bob = new Peer({node: exampleApp, address: 'ws/127.0.0.1:8082'})
     let helloWorld = await bob.send("Hello!").catch(e => {
         console.log('Error', e);
     }); // create new conversation
-    console.log('HelloWorld Result', helloWorld);
+    //console.log('HelloWorld Result', helloWorld);
     //assert.strictEqual(helloWorld, 'World!');
     
     // create a new conversation because the last one was closed
@@ -24,23 +22,35 @@ exampleApp.on('ready', async () => {
     let howru = await dataMessage.reply("Thanks for you opinion"); // reply to the message
     //assert.strictEqual(howru, "Welp, it was nice talking to ya");
 
+    let exampleReceiver = exampleApp.listen('privateKey', {
+        fins: 2
+    }, (stream) => {
+
+    });
+
+    let exampleCircuit = exampleApp.connect('targetdistination',
+        {
+            fins: 2
+        })
 
     let newPush = await bob.push('Pushed data man');
 
     console.log('Test Completed!')
+
+    console.log('resolve p2p', exampleApp.resolvep2p("test"));
 });
 
 exampleApp.on('message', async (msg) => {
     if(msg.body == "Hello!") {
-        console.log('Ending the convo the first time');
+        //console.log('Ending the convo the first time');
         msg.end("World!"); // end the conversation
     }
 
-    console.log("body:", msg.body);
+    //console.log("body:", msg.body);
     if(msg.body.status == "incoming") {
-        console.log("Body.msg:", msg.body.msg) // returns "Data"
+        //console.log("Body.msg:", msg.body.msg) // returns "Data"
         let dataReply = await msg.reply("That is some super important data!"); // keep conversation open
-        console.log("Datareply:", dataReply.body); // Thanks for your opinion
+        //console.log("Datareply:", dataReply.body); // Thanks for your opinion
         dataReply.end("Welp, it was nice talking to ya"); // close the conversation -- open a new one with 'send()' to start again
     }
 });
