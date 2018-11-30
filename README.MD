@@ -1,4 +1,4 @@
-# FinJS
+# K.js
 A framework for easily creating decentralized applications in NodeJS
 
 ## Testing
