@@ -9,7 +9,7 @@ A framework for easily creating decentralized applications in NodeJS
 ## Usage
 ```js
 // Require the library
-const { Node, Peer } = require('finjs')
+const { Node, Peer } = require('k.js')
 
 // Create new node using a custom name and port
 let exampleApp = new Node('example', {port: 8082});
