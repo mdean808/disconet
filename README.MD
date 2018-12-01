@@ -1,4 +1,4 @@
-# K.js
+# potash
 A framework for easily creating decentralized applications in NodeJS
 
 ## Testing
@@ -9,7 +9,7 @@ A framework for easily creating decentralized applications in NodeJS
 ## Usage
 ```js
 // Require the library
-const { Node, Peer } = require('k.js')
+const { Node, Peer } = require(potash')
 
 // Create new node using a custom name and port
 let exampleApp = new Node('example', {port: 8082});
