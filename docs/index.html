@@ -1,22 +1,86 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello Bulma!</title>
+    <title>potash - a nodejs library</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-  </head>
-  <body>
-  <section class="section">
-    <div class="container">
-      <h1 class="title">
-        k.js
-      </h1>
-      <p class="subtitle">
-            A framework for easily creating decentralized applications in NodeJS
-      </p>
-    </div>
-  </section>
-  </body>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.13.1/highlight.min.js"></script>
+</head>
+
+<body>
+    <section class="section" style="background-color: #dad636">
+        <div class="container" style="background-color: #fbfbfb; padding: 15px 15px 15px 15px; margin-top: -48px; margin-bottom: -48px">
+                <img src="./banana.png" style="transform: rotate(400deg); display: inline; width: 128px; height: 128px">
+            <h1 class="title" style="display: inline">
+                potash
+            </h1>
+            <p class="subtitle" style="display: inline; margin-left: 20px">
+                A framework for easily creating decentralized applications in NodeJS
+            </p>
+            <hr style="background-color: #dad636">
+            <h1 class="title">
+                Getting Started
+            </h1>
+            <p class="subtitle">
+                Install potash  <code class="bash">npm install potash</code>
+            </p>
+            <br>
+            <p class="subtitle">Include potash and create a node</p>
+            <pre><code class="js">
+const k = require('potash') // change to potash for release
+const node = new k();
+                    
+node.on('ready', async () => {
+
+});
+                    
+node.listen()</code></pre>
+            <hr>
+            <h1 class="title">
+                Key Elements
+            </h1>
+            <p class="subtitle">
+                Key elements description that is kinda long but whatever
+            </p>
+            <hr>
+            <h1 class="title">
+                Example Code
+            </h1>
+            <p class="subtitle">
+                This is example code
+            </p>
+            <pre><code class="js">
+const k = require('potash');
+const node = new k();
+                    
+node.on('ready', async () => {
+    let proxy = node.genCircuit(2, '414a61c8cc5240791fa05e0657e8ca0904f3faf5cd56ab24c29c0bafbb3e572b');
+                    
+    let server = k.createServer((socket) => {
+    socket.write('Echo server\r\n');
+        socket.pipe(socket);
+    });
+                        
+    server.listen(1337, proxy);
+                    
+    let client = new k.Socket(proxy);
+    client.connect(1337, '04bcaaf03b87836c2094b8b844dba8e93bbef93f4534997f.k', () => {
+        console.log('Connected');
+        client.write('Hello, server! Love, Client.');
+     });
+});                                   
+            </code></pre>
+            <hr>
+        </div>
+    </section>
+    <script>
+        hljs.initHighlightingOnLoad();
+    </script>
+
+</body>
+
 </html>
