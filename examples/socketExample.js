@@ -1,4 +1,4 @@
-const k = require('../src2/main.js') // change to potash for release
+const k = require('potash');
 const node = new k();
 
 node.on('ready', async () => {
@@ -17,5 +17,7 @@ node.on('ready', async () => {
         client.write('Hello, server! Love, Client.');
     });
 });
+
+node.listen()
 
 
