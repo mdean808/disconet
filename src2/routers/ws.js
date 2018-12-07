@@ -1,9 +1,9 @@
 module.exports = {
     name: 'ws',
-    connect: (hostname, port) => {
+    connect: (url, socket) => {
         
     },
-    listen: (port) => {
+    listen: (port, node) => {
         
     }
 };

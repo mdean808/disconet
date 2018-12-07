@@ -11,7 +11,7 @@ node.on('ready', async () => {
     
     server.listen(1337, proxy);
 
-    let client = new k.Socket(proxy);
+    let client = new k.Socket({ circuit: proxy });
     client.connect(1337, '04bcaaf03b87836c2094b8b844dba8e93bbef93f4534997f.k', () => {
         console.log('Connected');
         client.write('Hello, server! Love, Client.');
