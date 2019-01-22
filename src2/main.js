@@ -21,7 +21,7 @@ class Node extends EventEmitter {
         this.key = ec.genKeyPair();
 
         this.on('connection', (socket) => {
-
+            
         });
     }
 
@@ -38,6 +38,13 @@ class Node extends EventEmitter {
 
         while(!isCompatible(this.outgoing, peer[0].accepts)) {
             let randPeer = this.peers[parseInt(Math.random() * this.peers.length)];
+            peers.unshift(randPeer);
+            
+            if(peers.length > maxSize) {
+                throw new Error("Could not create a circuit within specified limits");
+            }
+
+            // TODO: implement some kinda pathfinder that obeys da limits brada
         }
 
         return new Circuit(this, peers);
@@ -83,7 +90,7 @@ class Node extends EventEmitter {
     }
 }
 
-Node.Socket = class CircuitSocket extends Socket {
+Node.Socket = class CircuitSocket extends net.Socket {
     constructor(options) {
         super(options);
 
