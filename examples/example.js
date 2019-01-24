@@ -16,7 +16,8 @@ node.on('ready', async () => {
     // hardcoded private key
     let proxy = node.genCircuit(2, '414a61c8cc5240791fa05e0657e8ca0904f3faf5cd56ab24c29c0bafbb3e572b');
 
-    let server = k.createServer((socket) => {
+    let server = K.createServer((socket) => {
+        console.log('Server created')
         socket.write('Echo server\r\n');
         socket.pipe(socket);
     });
@@ -25,7 +26,7 @@ node.on('ready', async () => {
 
     console.log(proxy.hostname); // should b 04bcaaf03b87836c2094b8b844dba8e93bbef93f4534997f
 
-    let client = new k.Socket(proxy);
+    let client = new K.Socket(proxy);
     client.connect(PORT, '04bcaaf03b87836c2094b8b844dba8e93bbef93f4534997f.k', () => {
         console.log('Connected');
         client.write('Hello, server!\n\nLove, Client.');
@@ -35,4 +36,3 @@ node.on('ready', async () => {
 
 // listen at port 1337
 node.listen(PORT)
-

@@ -29,10 +29,7 @@ function prompt(question) {
   });
 }
 
-const {
-  Node,
-  Peer
-} = require('../src/main.js') // change to finjs for release
+const { Node, Peer } = require('../src/main.js') // change to finjs for release
 
 let exampleChat = new Node('exampleChat', {
   port: port
