@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const ec = new (require('elliptic').ec)('secp256k1');
+const ec = new(require('elliptic').ec)('secp256k1');
 
 const tcpRouter = require('./routers/tcp.js');
 const wsRouter = require('./routers/ws.js');
@@ -24,33 +24,32 @@ class Node extends EventEmitter {
         // called after tcp/ws listen socket is connected
         this.on('connection', (socket) => {
             console.log("we had a connection")
+
+
+            socket.on('data', (data) => {
+                console.log("New data!", data)
+                if (data.id === "SERVER") {
+                    this.emit("serverConnection", data.serverId, socket);
+                }
+            })
+            /* 
+
+            var data = parseSocket(socket);
+
+            if(data.id == "SERVER") {
+                this.emit(data.serverId, socket);
+            }
+
+            */
         });
 
     }
 
-    genCircuit(minSize = 0, maxSize = 8, target = null, includeTarget = false) {
-        let targetPeer = targetPeer == null ? this.peers[parseInt(Math.random() * this.peers.length)]
-            : (targetPeer instanceof Peer ? targetPeer : this.lookup(targetPeer));
+    async genCircuit(minSize = 0, maxSize = 8, target = null, includeTarget = false) {
 
-        let peers = [];
-        peers.push(target);
-        
-        function isCompatible(a, b) {
-            return a.find((c) => a.indexOf(c) != -1);
-        }
-
-        while(!isCompatible(this.outgoing, peer[0].accepts)) {
-            let randPeer = this.peers[parseInt(Math.random() * this.peers.length)];
-            peers.unshift(randPeer);
-            
-            if(peers.length > maxSize) {
-                throw new Error("Could not create a circuit within specified limits");
-            }
-
-            // TODO: implement some kinda pathfinder that obeys da limits brada
-        }
-
-        return new Circuit(this, peers);
+        let circuit = new Circuit(this, []);
+        await circuit.generate(minSize, maxSize, target, includeTarget);
+        return circuit
     }
 
     lookup(hostname) {
@@ -65,19 +64,21 @@ class Node extends EventEmitter {
 
     createConnection(options, length, connectListener) {
         let proxy = null;
-        if(typeof(options.circuitSize) == 'number')
+        if (typeof (options.circuitSize) == 'number')
             proxy = this.genCircuit(options.circuitSize);
-        else if(typeof(options.circuit) != 'undefined')
+        else if (typeof (options.circuit) != 'undefined')
             proxy = options.circuit;
-        else if(typeof(length) == 'number')
+        else if (typeof (length) == 'number')
             proxy = this.genCircuit(length);
 
-        let client = new k.Socket({ circuit: proxy });
+        let client = new k.Socket({
+            circuit: proxy
+        });
         connectListener = (typeof length == 'function' ? length : connectListener);
 
-        if(typeof(options) == 'string') {
+        if (typeof (options) == 'string') {
             client.connect(options, connectListener);
-        } else if(typeof(options) == 'number') {
+        } else if (typeof (options) == 'number') {
             client.connect(options, length, connectListener);
         } else {
             client.connect(options.port, options.host, connectListener);
@@ -96,47 +97,62 @@ class Node extends EventEmitter {
             curRouter.listen(port, this);
         });
     }
+
+    createServer(cb) {
+        return new Promise((res, rej) => {
+            require('crypto').randomBytes(48, (err, buffer) => {
+                if(err) rej(err);
+                let serverId = buffer.toString('hex');
+    
+                this.on('serverConnection', (id, socket) => {
+                    if (id == serverId) {
+                        cb(socket);
+                    }
+                });
+            });
+        });
+    }
 }
 
 Node.Socket = class CircuitSocket extends net.Socket {
     constructor(options) {
         super(options);
 
-        this.node = options.circuit instanceof Circuit ? options.circuit.node : null; 
+        this.node = options.circuit instanceof Circuit ? options.circuit.node : null;
         this.circuit = options.circuit instanceof Circuit ? options.circuit : null;
     }
 
     connect(options, connectListener) {
-        if(this.node == null) {
+        if (this.node == null) {
             throw new Error("Socket not connected to a node!");
         }
 
         let path = options.path;
-        
+
         let router = options.router || '?';
         let port = options.port;
         let host = options.host;
 
-        if(typeof(path) != 'string') {
+        if (typeof (path) != 'string') {
             path = options.router + '://' + options.host + ':' + options.host;
         }
 
         let url = url.parse(path);
-        if(this.router.sends.length == 0) {
+        if (this.router.sends.length == 0) {
             throw new Error("Node not configured to allow outgoing requests!");
         }
 
         let peer = this.node.lookup(path.hostname);
-        if(peer == null) {
+        if (peer == null) {
             router == this.node.sends.indexOf('tcp') == -1 ? router : 'tcp';
             this.node.router(router).connect(url, this, this.circuit);
             return this;
         }
 
-        if(peer != null && peer.accepts.length == 0) {
+        if (peer != null && peer.accepts.length == 0) {
             throw new Error("Remote host configured to deny incoming requests");
         }
-        
+
         //finish this
     }
 }
