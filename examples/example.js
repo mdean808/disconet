@@ -17,7 +17,7 @@ node.on('ready', async () => {
     // generate a circuit with a minmum size of 2, default max size, and target 
     let proxy = node.genCircuit(2, null, '414a61c8cc5240791fa05e0657e8ca0904f3faf5cd56ab24c29c0bafbb3e572b');
 
-    let server = K.createServer((socket) => {
+    let server = K.createServer((socket) => { // todo: replace with K.hostBanana(server);
         /*console.log('ay someone connected')
         socket.write('Echo server\r\n');
         socket.pipe(socket);
