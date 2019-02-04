@@ -1,4 +1,4 @@
-# DiscoNet 💿
+# DiscoNet -- 💿🅾️🥅
 A framework for easily creating decentralized applications in NodeJS
 
 ## Testing
