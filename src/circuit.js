@@ -10,7 +10,7 @@ class Circuit {
     }
 
     generate(minSize = 0, maxSize = 8, target = null, includeTarget = false) {
-        let targetPeer = targetPeer == null ? this.peers[parseInt(Math.random() * this.peers.length)]
+        let targetPeer = target == null ? this.peers[parseInt(Math.random() * this.peers.length)]
             : (targetPeer instanceof Peer ? targetPeer : this.lookup(targetPeer));
 
         let hops = [];

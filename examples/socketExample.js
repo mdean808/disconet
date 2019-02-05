@@ -18,6 +18,6 @@ node.on('ready', async () => {
     });
 });
 
-node.listen()
+node.listen();
 
 

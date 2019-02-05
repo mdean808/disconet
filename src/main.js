@@ -3,6 +3,7 @@ const ec = new(require('elliptic').ec)('secp256k1');
 
 const tcpRouter = require('./routers/tcp.js');
 const wsRouter = require('./routers/ws.js');
+const Circuit = require('./circuit.js')
 
 const url = require('url');
 const net = require('net');
@@ -98,19 +99,85 @@ class Node extends EventEmitter {
         });
     }
 
-    createServer(cb) {
-        return new Promise((res, rej) => {
-            require('crypto').randomBytes(48, (err, buffer) => {
-                if(err) rej(err);
-                let serverId = buffer.toString('hex');
-    
-                this.on('serverConnection', (id, socket) => {
-                    if (id == serverId) {
-                        cb(socket);
-                    }
+    async hostDiscoParty(circuit, cb, remotePort) {
+        let serverId = await newDiscoKey();
+
+        if (typeof(cb) == 'function') {
+            /* 
+            hostDiscoParty((socket) => {
+                console.log("New connection by " + socket.id);
+
+                socket.on('data', (data) => {
+                    console.log(socket.id + " said " + data.toString())
                 });
             });
-        });
+            */
+            this.on('serverConnection', (id, socket) => {
+                if (id == serverId) {
+                    cb(socket);
+                }
+            });
+        } else if (Number.isInteger(cb)) {
+            /* 
+            
+            //the user has already created example third party tcp/ip server with the passed ports
+            
+            // can be any server on any port (not necessarily a node server)
+            var exec = require('child_process').exec;
+            //start minecraft server using eth jar on the preset port 25565
+            exec('java -jar minecraft_server.jar -Xmx1G -Xms1G nogui', function (error, stdOut, stdErr) {
+                    // do what u want with da server BRAH!
+                });
+
+
+            //generate peer to peer .disco address for your server ( so you don't need to port forward, or so you can be anonymous )
+            histDiscoParty(25565);
+
+            */
+
+            // Port passed into function
+            console.log("NEW PORT: ", cb)         
+            this.on('serverConnection', (id, socket) => {
+                if (id == serverId) {
+                    let client = net.createConnection({ port: cb });
+                    this.pipeSockets(remote, local); //cb(socket);
+                }
+            });
+        } else if(cb instanceof net.Server) {
+            /* 
+            // the user has already created an express server and passed it
+            // step 1: create express server
+            const express = require('express')
+            const app = express()
+            const port = 3000
+
+            app.get('/', (req, res) => res.send('Hello World!'))
+
+            // step 2: get net.Server object called server
+            let server = app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+
+            // step 3: make .disco address by passing server
+            hostDiscoParty(server);
+            
+            */
+
+            this.on('serverConnection', (id, socket) => {
+                if (id == serverId) {
+                    let client = net.createConnection({ port: cb });
+                    cb.emit('connection', client);
+                }
+            });
+// Express server passed into function
+        } else {
+            throw new Error("Invalid argument passed into function");
+        }
+
+        //return serverId + ".disco";
+    }
+
+    pipeSockets(remote, local) { // warning: will probably explode
+        remote.pipe(local);
+        local.pipe(remote);
     }
 }
 
@@ -158,3 +225,14 @@ Node.Socket = class CircuitSocket extends net.Socket {
 }
 
 module.exports = Node;
+
+function newDiscoKey() {
+    var crypto = require("crypto");
+    return new Promise(function (res, rej) {                                
+        crypto.randomBytes(48, (err, buffer) => {
+            if(err) rej(err);
+            let serverId = buffer.toString('hex');
+            res(serverId)
+        });
+    })
+}
