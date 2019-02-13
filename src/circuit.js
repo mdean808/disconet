@@ -1,3 +1,6 @@
+const { Peer } = require('./peer.js');
+const ec = new(require('elliptic').ec)('secp256k1');
+
 class Circuit {
     // hops is an array of random nodes
     constructor(node, hops) {
@@ -11,7 +14,7 @@ class Circuit {
 
     generate(minSize = 0, maxSize = 8, target = null, includeTarget = false) {
         let targetPeer = target == null ? this.peers[parseInt(Math.random() * this.peers.length)]
-            : (targetPeer instanceof Peer ? targetPeer : this.lookup(targetPeer));
+            : (target instanceof Peer ? target : this.lookup(target));
 
         let hops = [];
         hops.push(target);
@@ -20,8 +23,8 @@ class Circuit {
             return a.find((c) => a.indexOf(c) != -1);
         }
 
-        while(!isCompatible(this.outgoing, hops[0].accepts)) {
-            let randPeer = node.peers[parseInt(Math.random() * node.peers.length)];
+        while(!isCompatible(this.node.outgoing, hops[0].accepts)) {
+            let randPeer = this.node.peers[parseInt(Math.random() * this.node.peers.length)];
             hops.unshift(randPeer);
             
             if(hops.length > maxSize) {
@@ -32,6 +35,14 @@ class Circuit {
         }
         
         this.hops = hops;
+    }
+
+    lookup(target) {
+        return this.node.lookup(target);
+    }
+
+    get hostname() {
+        return Buffer.from(this.node.key.getPublic().toString()).toString('hex'); // should get the public key as hex ( or as a buffer then convert it to a string using .toString('hex')) 
     }
 }
 

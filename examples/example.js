@@ -12,7 +12,7 @@ node.on('ready', async () => {
 
     //BROKEN???
     // generate a circuit with a minmum size of 2, default max size, and target -- make this return an addres
-    let proxy = node.genCircuit(2, null, '414a61c8cc5240791fa05e0657e8ca0904f3faf5cd56ab24c29c0bafbb3e572b');
+    let proxy = await node.genCircuit(2, null, '414a61c8cc5240791fa05e0657e8ca0904f3faf5cd56ab24c29c0bafbb3e572b');
 
     Disco.hostDiscoParty(proxy, (connection) => {
         /*console.log('ay someone connected')
@@ -38,8 +38,9 @@ node.on('ready', async () => {
     //Disco.hostDiscoParty(25565); // "eofijaeofijaeiofj.disco"
     // Create an express server here
     //Discord.hostDiscoParty(app.listen(25565));
+    //     ^ heck
     
-    console.log(proxy.hostname); // should b 04bcaaf03b87836c2094b8b844dba8e93bbef93f4534997f
+    console.log("hostname", proxy.hostname); // should b 04bcaaf03b87836c2094b8b844dba8e93bbef93f4534997f
 
     let client = new Disco.Socket(proxy);
     client.connect(PORT, '04bcaaf03b87836c2094b8b844dba8e93bbef93f4534997f.k', () => {

@@ -5,8 +5,10 @@ const tcpRouter = require('./routers/tcp.js');
 const wsRouter = require('./routers/ws.js');
 const Circuit = require('./circuit.js')
 
-const url = require('url');
+const { Peer, HTTPeer } = require('./peer.js');
+
 const net = require('net');
+const URL = require('url');
 
 class Node extends EventEmitter {
     constructor(accepts = ['ws', 'tcp'], outgoing = ['ws', 'tcp']) {
@@ -47,7 +49,6 @@ class Node extends EventEmitter {
     }
 
     async genCircuit(minSize = 0, maxSize = 8, target = null, includeTarget = false) {
-
         let circuit = new Circuit(this, []);
         await circuit.generate(minSize, maxSize, target, includeTarget);
         return circuit
@@ -56,7 +57,7 @@ class Node extends EventEmitter {
     lookup(hostname) {
         return this.peers.find((peer) => {
             return peer.hostname == hostname || peer.publicKey == hostname;
-        }) || new HTTPeer(url.parse(hostname));
+        }) || new HTTPeer(URL.parse(hostname));
     }
 
     router(protocol) {
@@ -99,7 +100,7 @@ class Node extends EventEmitter {
         });
     }
 
-    async hostDiscoParty(circuit, cb, remotePort) {
+    static async hostDiscoParty(circuit, cb, remotePort) {
         let serverId = await newDiscoKey();
 
         if (typeof(cb) == 'function') {
@@ -112,7 +113,7 @@ class Node extends EventEmitter {
                 });
             });
             */
-            this.on('serverConnection', (id, socket) => {
+            circuit.node.on('serverConnection', (id, socket) => {
                 if (id == serverId) {
                     cb(socket);
                 }
@@ -137,10 +138,10 @@ class Node extends EventEmitter {
 
             // Port passed into function
             console.log("NEW PORT: ", cb)         
-            this.on('serverConnection', (id, socket) => {
+            circuit.node.on('serverConnection', (id, socket) => {
                 if (id == serverId) {
                     let client = net.createConnection({ port: cb });
-                    this.pipeSockets(remote, local); //cb(socket);
+                    pipeSockets(remote, local); //cb(socket);
                 }
             });
         } else if(cb instanceof net.Server) {
@@ -161,7 +162,7 @@ class Node extends EventEmitter {
             
             */
 
-            this.on('serverConnection', (id, socket) => {
+            circuit.node.on('serverConnection', (id, socket) => {
                 if (id == serverId) {
                     let client = net.createConnection({ port: cb });
                     cb.emit('connection', client);
@@ -174,19 +175,19 @@ class Node extends EventEmitter {
 
         //return serverId + ".disco";
     }
+}
 
-    pipeSockets(remote, local) { // warning: will probably explode
-        remote.pipe(local);
-        local.pipe(remote);
-    }
+function pipeSockets(remote, local) { // warning: will probably explode
+    remote.pipe(local);
+    local.pipe(remote);
 }
 
 Node.Socket = class CircuitSocket extends net.Socket {
     constructor(options) {
         super(options);
 
-        this.node = options.circuit instanceof Circuit ? options.circuit.node : null;
-        this.circuit = options.circuit instanceof Circuit ? options.circuit : null;
+        this.node = options instanceof Circuit ? options.node : options.circuit.node; // : null;
+        this.circuit = options.circuit instanceof Circuit ? options : options.circuit; // : null;
     }
 
     connect(options, connectListener) {
@@ -204,14 +205,14 @@ Node.Socket = class CircuitSocket extends net.Socket {
             path = options.router + '://' + options.host + ':' + options.host;
         }
 
-        let url = url.parse(path);
-        if (this.router.sends.length == 0) {
+        let url = URL.parse(path);
+        if (this.node.outgoing.length == 0) {
             throw new Error("Node not configured to allow outgoing requests!");
         }
 
-        let peer = this.node.lookup(path.hostname);
+        let peer = this.node.lookup(url.hostname);
         if (peer == null) {
-            router == this.node.sends.indexOf('tcp') == -1 ? router : 'tcp';
+            router == this.node.outgoing.indexOf('tcp') == -1 ? router : 'tcp';
             this.node.router(router).connect(url, this, this.circuit);
             return this;
         }
